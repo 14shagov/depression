@@ -19,7 +19,7 @@ std::unordered_map<char, int> BuildBadCharTable(const std::string& pattern)
     std::unordered_map<char, int> badChar;
     int len = pattern.length();
     for (int i = 0; i < len; ++i)
-        badChar[pattern[i]] = len - i - 1;
+        badChar[pattern[i]] = i;
     return badChar;
 }
 
@@ -29,28 +29,32 @@ std::vector<int> BuildGoodSuffixTable(const std::string& pattern)
     std::vector<int> shift(m + 1, m);
     std::vector<int> borders(m + 1, 0);
 
-    int i = m;
-    int j = m + 1;
-    borders[i] = j;
-    while (i > 0)
+    int suffixPos = m;
+    int prefixPtr = m + 1;
+    borders[suffixPos] = prefixPtr;
+
+    while (suffixPos > 0)
     {
-        while (j <= m && (i == 0 || pattern[i - 1] != pattern[j - 1]))
+        while (prefixPtr <= m && pattern[suffixPos - 1] != pattern[prefixPtr - 1])
         {
-            if (shift[j] == m) 
-                shift[j] = j - i;
-            j = borders[j];
+            if (shift[prefixPtr] == m)
+                shift[prefixPtr] = prefixPtr - suffixPos;
+            prefixPtr = borders[prefixPtr];
         }
-        i--;
-        j--;
-        borders[i] = j;
+        suffixPos--;
+        prefixPtr--;
+        borders[suffixPos] = prefixPtr;
     }
 
-    j = borders[0];
-    for (i = 0; i <= m; ++i)
+    int currentBorder = borders[0];
+    for (int shiftPos = 0; shiftPos <= m; ++shiftPos)
     {
-        if (shift[i] == m) shift[i] = j;
-        if (i == j) j = borders[j];
+        if (shift[shiftPos] == m)
+            shift[shiftPos] = currentBorder;
+        if (shiftPos == currentBorder)
+            currentBorder = borders[currentBorder];
     }
+
     return shift;
 }
 
@@ -128,7 +132,8 @@ void ColorRendering(std::string text, std::vector<std::pair<int, int>> merged)
 
     std::sort(events.begin(), events.end(), [](const auto& a, const auto& b)
         {
-            return a.first < b.first || (a.first == b.first && a.second);
+            return a.first < b.first || (a.first == b.first && !a.second);
+//            return a.first < b.first || (a.first == b.first && a.second);
         });
 
     int highlightLevel = 0;
@@ -181,6 +186,12 @@ void main() {
     ToLower(text);
     ToLower(pattern);
 
+    if (text.empty())
+    {
+        std::cout << "Ошибка: текст не может быть пустым" << std::endl;
+        return;
+    }
+
     if (pattern.empty())
     {
         std::cout << "Ошибка: паттерн не может быть пустым" << std::endl;
@@ -203,4 +214,3 @@ void main() {
         std::cout << "[" << interval.first << "-" << interval.second - 1 << "] ";
     std::cout << std::endl;
 }
-
