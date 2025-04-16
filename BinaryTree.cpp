@@ -44,15 +44,15 @@ private:
     {
         if (node == nullptr) return;
         space += height; // Увеличиваем отступ для визуализации уровней
-        
+
         printTree(node->right, space, height); // Сначала правые ветви (верх в консоли)
         std::cout << std::endl;
-        
+
         // Формируем отступ для текущего узла
         for (int i = height; i < space; ++i)
             std::cout << ' ';
         std::cout << node->data << std::endl;
-        
+
         printTree(node->left, space, height); // Затем левые ветви (низ в консоли)
     }
 
@@ -153,24 +153,21 @@ public:
     }
 };
 
-int main()
+void main()
 {
     setlocale(LC_ALL, "RU"); // Для поддержки кириллицы
     BinaryTree tree;
-    int choice;
+    bool choice;
 
     // Выбор способа заполнения
     std::cout << "Выберите способ заполнения дерева:" << std::endl
-              << "1. Вручную" << std::endl
-              << "2. Случайными числами" << std::endl
-              << "Введите номер варианта: ";
+        << "Вручную - 0" << std::endl
+        << "Случайными числами - 1" << std::endl;
     std::cin >> choice;
 
-    if (choice == 1)
-    {
+    if (!choice)
         tree.fillManual();
-    }
-    else if (choice == 2)
+    else if (choice)
     {
         int count;
         std::cout << "Введите количество случайных элементов: ";
@@ -180,10 +177,10 @@ int main()
     else
     {
         std::cout << "Неверный выбор." << std::endl;
-        return 1;
+        return;
     }
 
     tree.optimize(); // Балансировка дерева
     tree.print();    // Вывод результата
-    return 0;
+    return;
 }
