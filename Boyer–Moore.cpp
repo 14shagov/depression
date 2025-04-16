@@ -72,21 +72,21 @@ std::vector<int> BoyerMooreSearch(const std::string& text, const std::string& pa
 
     while (shift <= n - m)
     {
-        int j = m - 1;
-        while (j >= 0 && pattern[j] == text[shift + j])
-            j--;
+        int patternIndex = m - 1;
+        while (patternIndex >= 0 && pattern[patternIndex] == text[shift + patternIndex])
+            patternIndex--;
 
-        if (j < 0)
+        if (patternIndex < 0)
         {
             matches.push_back(shift);
             shift += goodSuffix[0];
         }
         else
         {
-            char bc = text[shift + j];
-            int bcShift = badChar.count(bc) ? badChar[bc] : -1;
-            int badCharShift = std::max(1, j - bcShift);
-            int goodSuffixShift = goodSuffix[j + 1];
+            char mismatchChar = text[shift + patternIndex];
+            int bcShift = badChar.count(mismatchChar) ? badChar[mismatchChar] : -1;
+            int badCharShift = std::max(1, patternIndex - bcShift);
+            int goodSuffixShift = goodSuffix[patternIndex + 1];
             shift += std::max(badCharShift, goodSuffixShift);
         }
     }
@@ -99,15 +99,15 @@ std::vector<std::pair<int, int>> MergeIntervals(const std::vector<int>& position
     if (positions.empty())
         return merged;
 
-    std::vector<int> sortedPos = positions;
-    std::sort(sortedPos.begin(), sortedPos.end());
+    std::vector<int> sorted = positions;
+    std::sort(sorted.begin(), sorted.end());
 
-    int start = sortedPos[0];
+    int start = sorted[0];
     int end = start + patternLen;
 
-    for (size_t i = 1; i < sortedPos.size(); ++i)
+    for (size_t i = 1; i < sorted.size(); ++i)
     {
-        int pos = sortedPos[i];
+        int pos = sorted[i];
         if (pos <= end)
             end = std::max(end, pos + patternLen);
         else
@@ -118,48 +118,37 @@ std::vector<std::pair<int, int>> MergeIntervals(const std::vector<int>& position
         }
     }
     merged.emplace_back(start, end);
+
     return merged;
 }
 
-void ColorRendering(std::string text, std::vector<std::pair<int, int>> merged)
+void ColorRendering(const std::string& text, const std::vector<std::pair<int, int>>& merged) 
 {
-    std::vector<std::pair<int, bool>> events;
-    for (const auto& interval : merged)
-    {
-        events.emplace_back(interval.first, true);
-        events.emplace_back(interval.second, false);
-    }
-
-    std::sort(events.begin(), events.end(), [](const auto& a, const auto& b)
-        {
-            return a.first < b.first || (a.first == b.first && !a.second);
-//            return a.first < b.first || (a.first == b.first && a.second);
-        });
-
-    int highlightLevel = 0;
-    size_t eventIdx = 0;
-
-    std::cout << std::endl << "Результат поиска:" << std::endl;
+    std::cout << std::endl << "Результат поиска : " << std::endl;
     SetConsoleColor(DEFAULT_COLOR);
 
-    for (size_t i = 0; i < text.size(); ++i)
-    {
-        while (eventIdx < events.size() && events[eventIdx].first == i)
-        {
-            if (events[eventIdx].second)
-            {
-                if (highlightLevel++ == 0)
-                    SetConsoleColor(FOREGROUND_RED);
-            }
-            else
-                if (--highlightLevel == 0)
-                    SetConsoleColor(DEFAULT_COLOR);
-            ++eventIdx;
-        }
-        std::cout << text[i];
-    }
+    size_t currentInterval = 0;
+    bool isHighlighted = false;
 
-    if (highlightLevel > 0)
+    for (size_t i = 0; i < text.size(); ++i) 
+    {
+        if (currentInterval < merged.size() && i == merged[currentInterval].first) 
+        {
+            SetConsoleColor(FOREGROUND_RED);
+            isHighlighted = true;
+        }
+
+        std::cout << text[i];
+
+        if (isHighlighted && i + 1 == merged[currentInterval].second) 
+        {
+            SetConsoleColor(DEFAULT_COLOR);
+            isHighlighted = false;
+            currentInterval++;
+        }
+    }
+    
+    if (isHighlighted) 
         SetConsoleColor(DEFAULT_COLOR);
 }
 
@@ -171,7 +160,8 @@ void ToLower(std::string& text)
         });
 }
 
-void main() {
+void main()
+{
     setlocale(LC_ALL, "RU");
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
